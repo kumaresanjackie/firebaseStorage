@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
         debugShowCheckedModeBanner: false,
         title: title,
-        theme: ThemeData(primarySwatch: Colors.green),
+        theme: ThemeData(primarySwatch: Colors.blue),
         home: MainPage(),
       );
 }
@@ -62,56 +62,62 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
-    _stream = FirebaseFirestore.instance.collection("Kumar").snapshots();
+    _stream = FirebaseFirestore.instance.collection("Kumaresan").snapshots();
     getUrl();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(MyApp.title),
-        centerTitle: true,
-      ),
-      body: Container(
-        padding: EdgeInsets.all(32),
-        child: StreamBuilder<Object>(
-            stream: _stream,
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return Center(child: CircularProgressIndicator());
-              }
-              ;
-              return ListView.builder(
-                  itemCount: (snapshot.data as QuerySnapshot).docs.length,
-                  itemBuilder: (context, index) {
-                    Map<String, dynamic> document =
-                        (snapshot.data as QuerySnapshot).docs[index].data()
-                            as Map<String, dynamic>;
-
-                    return VideoPlayerClass(
-                      document["image_url"].toString(),
-                      document["file_name"].toString(),
-                    );
-                  });
-            }),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          selectFile();
-        },
-        child: Icon(
-          // _controller.value.isPlaying ? Icons.add : Icons.play_arrow,
-          Icons.add,
+        appBar: AppBar(
+          title: Text(MyApp.title),
+          centerTitle: true,
         ),
-      ),
-    );
+        body: Container(
+          padding: EdgeInsets.all(32),
+          child: StreamBuilder<Object>(
+              stream: _stream,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Center(child: CircularProgressIndicator());
+                }
+                ;
+                return ListView.builder(
+                    itemCount: (snapshot.data as QuerySnapshot).docs.length,
+                    itemBuilder: (context, index) {
+                      Map<String, dynamic> document =
+                          (snapshot.data as QuerySnapshot).docs[index].data()
+                              as Map<String, dynamic>;
+
+                      return VideoPlayerClass(
+                        document["image_url"].toString(),
+                        document["file_name"].toString(),
+                      );
+                    });
+              }),
+        ),
+        floatingActionButton:
+            Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+          FloatingActionButton(
+            onPressed: () => {},
+            child: task != null ? buildUploadStatus(task!) : Text("0.0 %"),
+          ),
+          SizedBox(
+            width: 10,
+          ),
+          FloatingActionButton(
+            onPressed: () {
+              selectFile();
+            },
+            child: Icon(Icons.add),
+            heroTag: "fab1",
+          ),
+        ]));
   }
 
   Future selectFile() async {
     final result = await FilePicker.platform
         .pickFiles(allowMultiple: false, type: FileType.video);
-
     if (result == null) return;
     final path = result.files.single.path!;
 
@@ -135,7 +141,7 @@ class _MainPageState extends State<MainPage> {
 
     final snapshot = await task!.whenComplete(() {});
     final urlDownload = await snapshot.ref.getDownloadURL();
-    FirebaseFirestore.instance.collection("Kumar").add({
+    FirebaseFirestore.instance.collection("Kumaresan").add({
       "image_url": urlDownload,
       "file_name": filePath.toString().substring(0, 20)
     });
@@ -148,11 +154,13 @@ class _MainPageState extends State<MainPage> {
           if (snapshot.hasData) {
             final snap = snapshot.data!;
             final progress = snap.bytesTransferred / snap.totalBytes;
-            final percentage = (progress * 100).toStringAsFixed(2);
+            final percentage = (progress * 100).toString().substring(0, 3);
 
-            return Text(
-              '$percentage %',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            return Center(
+              child: Text(
+                '$percentage %',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
             );
           } else {
             return Container();
